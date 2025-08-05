@@ -1,0 +1,17 @@
+{
+  "name": "upload-distribution-action",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "dist/release-distribution.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "axios-logger": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "typescript": "^5.4.0"
+  }
+}

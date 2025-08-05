@@ -1,0 +1,19 @@
+name: "Upload Distribution"
+description: "Uploads .deb packages to Firebase or backend"
+inputs:
+  file:
+    description: "Path to the file to upload"
+    required: true
+  version:
+    description: "Version of the package"
+    required: true
+  architecture:
+    description: "Target architecture (e.g., amd64)"
+    required: true
+  token:
+    description: "DAISYTUNER_API_TOKEN"
+    required: true
+
+runs:
+  using: "node20"
+  main: "dist/release-distribution.js"
