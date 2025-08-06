@@ -6,6 +6,7 @@ import { execSync } from "child_process";
 import { createHash } from "crypto";
 import axios from "axios";
 import * as AxiosLogger from 'axios-logger';
+import path from "path";
 
 type GenerateDistributableUploadUrlPayload = {
     fileName: string
@@ -58,7 +59,7 @@ const uploadDistributable = async () => {
 
     // Generate the upload url
     const response = await generateDistributableUploadUrl(token, {
-      fileName: targetFile,
+      fileName: path.basename(targetFile),
       version: version,
       architecture: architecture,
       sha256: sha256,

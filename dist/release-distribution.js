@@ -41,6 +41,7 @@ const fs_1 = __importDefault(require("fs"));
 const index_1 = __importStar(require("./index"));
 const crypto_1 = require("crypto");
 const axios_1 = __importDefault(require("axios"));
+const path_1 = __importDefault(require("path"));
 const generateDistributableUploadUrl = async (token, payload, rest_url) => {
     const response = await (0, index_1.default)(token, "Token").post(rest_url, payload).catch(index_1.errorHandler);
     return response.data;
@@ -66,7 +67,7 @@ const uploadDistributable = async () => {
     console.log(`SHA256 of ${targetFile}: ${sha256}`);
     // Generate the upload url
     const response = await generateDistributableUploadUrl(token, {
-        fileName: targetFile,
+        fileName: path_1.default.basename(targetFile),
         version: version,
         architecture: architecture,
         sha256: sha256,
