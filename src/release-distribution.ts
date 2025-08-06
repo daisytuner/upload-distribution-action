@@ -17,8 +17,10 @@ type GenerateDistributableUploadUrlPayload = {
 }
 
 type DistributableUploadResponse = {
-    url: string;
-    entryCreated?: boolean
+    success: boolean;
+    data: {
+        uploadUrl: string;
+    };
 }
 
 
@@ -65,7 +67,7 @@ const uploadDistributable = async () => {
       sha256: sha256,
     }, rest_url)
 
-    const url = response.url
+    const url = response.data.uploadUrl;
 
     const file = fs.readFileSync(targetFile);
 

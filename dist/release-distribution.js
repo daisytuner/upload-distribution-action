@@ -72,7 +72,7 @@ const uploadDistributable = async () => {
         architecture: architecture,
         sha256: sha256,
     }, rest_url);
-    const url = response.url;
+    const url = response.data.uploadUrl;
     const file = fs_1.default.readFileSync(targetFile);
     // Upload the file to the upload url
     try {
