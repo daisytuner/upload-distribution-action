@@ -21,8 +21,8 @@ type DistributableUploadResponse = {
 }
 
 
-const generateDistributableUploadUrl = async (token: string, payload: GenerateDistributableUploadUrlPayload): Promise<DistributableUploadResponse> => {
-    const response = await api(token, "Token").post<DistributableUploadResponse>(`/v1/system/runner-distributions/upload`, payload).catch(errorHandler);
+const generateDistributableUploadUrl = async (token: string, payload: GenerateDistributableUploadUrlPayload, rest_url: string): Promise<DistributableUploadResponse> => {
+    const response = await api(token, "Token").post<DistributableUploadResponse>(rest_url, payload).catch(errorHandler);
     return response.data;
 }
   
@@ -30,19 +30,17 @@ const generateDistributableUploadUrl = async (token: string, payload: GenerateDi
 const uploadDistributable = async () => {
 
     loadServerDebugConfig();
-    // Get the secret token from the environment variable set via the GitHub Actions workflow secrets
-    const token = process.env.DAISYTUNER_API_TOKEN;
+
+    const token = process.env['INPUT_TOKEN']!;
 
     if (!token) {
       throw new Error('DAISYTUNER_API_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.')
     }
 
-    }
-
     const targetFile = process.env['INPUT_FILE']!;
     const version = process.env['INPUT_VERSION']!;
     const architecture = process.env['INPUT_ARCHITECTURE']!;
-    const token = process.env['INPUT_TOKEN']!;
+    const rest_url = process.env['INPUT_URL']!;
 
     if (!fs.statSync(targetFile)) {// Check if the file exists
       console.error(`File ${targetFile} does not exist.`);
@@ -64,7 +62,7 @@ const uploadDistributable = async () => {
       version: version,
       architecture: architecture,
       sha256: sha256,
-    })
+    }, rest_url)
 
     const url = response.url
 

@@ -13,6 +13,9 @@ inputs:
   token:
     description: "DAISYTUNER_API_TOKEN"
     required: true
+  url:
+    description: "REST API URL for the backend"
+    required: true
 
 runs:
   using: "node20"
