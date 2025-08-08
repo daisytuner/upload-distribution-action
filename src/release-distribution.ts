@@ -2,10 +2,9 @@
 
 import fs from "fs";
 import api, { errorHandler, loadServerDebugConfig } from "./index";
-import { execSync } from "child_process";
 import { createHash } from "crypto";
 import axios from "axios";
-import * as AxiosLogger from 'axios-logger';
+import fg from "fast-glob";
 import path from "path";
 
 type GenerateDistributableUploadUrlPayload = {
@@ -40,14 +39,22 @@ const uploadDistributable = async () => {
       throw new Error('DAISYTUNER_API_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.')
     }
 
-    const targetFile = process.env['INPUT_FILE']!;
+    const inputFile = process.env['INPUT_FILE']!;
     const version = process.env['INPUT_VERSION']!;
     const architecture = process.env['INPUT_ARCHITECTURE']!;
     const rest_url = process.env['INPUT_URL']!;
 
-    if (!fs.statSync(targetFile)) {// Check if the file exists
-      console.error(`File ${targetFile} does not exist.`);
-      process.exit(1);
+    const matchedFiles = await fg(inputFile);
+    if (matchedFiles.length === 0) {
+        console.error(`No files matched the pattern: ${inputFile}`);
+        process.exit(1);
+    }
+
+    const targetFile = matchedFiles[0]; // Use the first matched file
+
+    if (!fs.statSync(targetFile)) { // Check if the file exists
+        console.error(`File ${targetFile} does not exist.`);
+        process.exit(1);
     }
 
     console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}`);
