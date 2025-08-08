@@ -4,7 +4,7 @@
   "type": "commonjs",
   "main": "dist/release-distribution.js",
   "scripts": {
-    "build": "tsc"
+    "build": "ncc build src/index.ts -o dist && mv dist/index.js dist/release-distribution.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
