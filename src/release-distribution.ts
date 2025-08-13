@@ -74,11 +74,6 @@ const uploadDistributable = async () => {
       sha256: sha256,
     }, rest_url)
 
-    if (!response.success) {
-      console.error('Failed to generate upload URL:', response);
-      process.exit(1);
-    }
-
     const url = response.data.uploadUrl;
 
     const file = fs.readFileSync(targetFile);
