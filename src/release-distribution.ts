@@ -40,6 +40,7 @@ export async function uploadDistributable() {
     const inputFile = process.env['INPUT_FILE']!;
     const version = process.env['INPUT_VERSION']!;
     const architecture = process.env['INPUT_ARCHITECTURE']!;
+    const os = process.env['INPUT_OS'] || undefined;
     const rest_url = process.env['INPUT_URL']!;
 
     const matchedFiles = await fg(inputFile);
@@ -55,7 +56,7 @@ export async function uploadDistributable() {
         process.exit(1);
     }
 
-    console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}`);
+    console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}, os ${os}`);
 
 
     const hasher = createHash('sha256');
@@ -70,6 +71,7 @@ export async function uploadDistributable() {
       version: version,
       architecture: architecture,
       sha256: sha256,
+      os: os
     }, rest_url)
 
     const url = response.url

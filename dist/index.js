@@ -13403,11 +13403,12 @@ async function uploadDistributable() {
     (0, index_1.loadServerDebugConfig)();
     const token = process.env['INPUT_TOKEN'];
     if (!token) {
-        throw new Error('DAISYTUNER_API_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.');
+        throw new Error('INPUT_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.');
     }
     const inputFile = process.env['INPUT_FILE'];
     const version = process.env['INPUT_VERSION'];
     const architecture = process.env['INPUT_ARCHITECTURE'];
+    const os = process.env['INPUT_OS'] || undefined;
     const rest_url = process.env['INPUT_URL'];
     const matchedFiles = await (0, fast_glob_1.default)(inputFile);
     if (matchedFiles.length === 0) {
@@ -13419,7 +13420,7 @@ async function uploadDistributable() {
         console.error(`File ${targetFile} does not exist.`);
         process.exit(1);
     }
-    console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}`);
+    console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}, os ${os}`);
     const hasher = (0, crypto_1.createHash)('sha256');
     const fileBuffer = fs_1.default.readFileSync(targetFile);
     const sha256 = hasher.update(fileBuffer).digest('hex');
@@ -13430,6 +13431,7 @@ async function uploadDistributable() {
         version: version,
         architecture: architecture,
         sha256: sha256,
+        os: os
     }, rest_url);
     const url = response.url;
     const file = fs_1.default.readFileSync(targetFile);

@@ -16,6 +16,9 @@ inputs:
   url:
     description: "REST API URL for the backend"
     required: true
+  os:
+    description: "Target operating system (e.g., linux, darwin)"
+    required: false
 
 runs:
   using: "node20"
