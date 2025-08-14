@@ -19,4 +19,4 @@ inputs:
 
 runs:
   using: "node20"
-  main: "dist/release-distribution.js"
+  main: "dist/index.js"

@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
 import * as AxiosLogger from 'axios-logger';
 import { DEBUG, DEBUG_CONFIG } from "./debug-config";
+import { uploadDistributable } from "./release-distribution";
 
 export function loadServerDebugConfig() {
   if (DEBUG && DEBUG_CONFIG.SERVER !== undefined) {
@@ -79,3 +80,5 @@ export const errorHandler = (error: any) => {
 }
 
 export default api;
+
+uploadDistributable();

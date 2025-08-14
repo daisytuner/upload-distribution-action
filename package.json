@@ -4,9 +4,10 @@
   "type": "commonjs",
   "main": "dist/release-distribution.js",
   "scripts": {
-    "build": "ncc build src/index.ts -o dist && mv dist/index.js dist/release-distribution.js"
+    "build": "ncc build src/index.ts -o dist"
   },
   "dependencies": {
+    "@actions/core": "^1.11.1",
     "axios": "^1.6.0",
     "axios-logger": "^2.8.1",
     "fast-glob": "^3.3.3"

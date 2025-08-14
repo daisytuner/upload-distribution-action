@@ -16,10 +16,8 @@ type GenerateDistributableUploadUrlPayload = {
 }
 
 type DistributableUploadResponse = {
-    success: boolean;
-    data: {
-        uploadUrl: string;
-    };
+    url: string;
+    entryCreated?: boolean
 }
 
 
@@ -29,14 +27,14 @@ const generateDistributableUploadUrl = async (token: string, payload: GenerateDi
 }
   
 
-const uploadDistributable = async () => {
+export async function uploadDistributable() {
 
     loadServerDebugConfig();
 
     const token = process.env['INPUT_TOKEN']!;
 
     if (!token) {
-      throw new Error('DAISYTUNER_API_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.')
+      throw new Error('INPUT_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.')
     }
 
     const inputFile = process.env['INPUT_FILE']!;
@@ -74,7 +72,7 @@ const uploadDistributable = async () => {
       sha256: sha256,
     }, rest_url)
 
-    const url = response.data.uploadUrl;
+    const url = response.url
 
     const file = fs.readFileSync(targetFile);
 
@@ -104,5 +102,3 @@ const uploadDistributable = async () => {
 
 
 }
-
-uploadDistributable()
