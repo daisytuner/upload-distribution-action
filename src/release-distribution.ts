@@ -13,17 +13,29 @@ type GenerateDistributableUploadUrlPayload = {
     version?: string
     architecture?: string
     os?: string
+    uploadId?: string
 }
 
 type DistributableUploadResponse = {
     url: string;
+    uploadId?: string;
     entryCreated?: boolean
 }
 
+type DistributableUploadCompletedResponse = {
+    distId?: string;
+    msg?: string;
+}
 
-const generateDistributableUploadUrl = async (token: string, payload: GenerateDistributableUploadUrlPayload, rest_url: string): Promise<DistributableUploadResponse> => {
+
+async function  generateDistributableUploadUrl(token: string, payload: GenerateDistributableUploadUrlPayload, rest_url: string): Promise<DistributableUploadResponse> {
     const response = await api(token, "Token").post<DistributableUploadResponse>(rest_url, payload).catch(errorHandler);
     return response.data;
+}
+
+async function notifyBackendUploadCompleted(token: string, payload: GenerateDistributableUploadUrlPayload, rest_url: string): Promise<DistributableUploadCompletedResponse> {
+  const response = await api(token, "Token").post<DistributableUploadCompletedResponse>(rest_url, payload).catch(errorHandler);
+  return response.data;
 }
   
 
@@ -66,15 +78,18 @@ export async function uploadDistributable() {
 
 
     // Generate the upload url
-    const response = await generateDistributableUploadUrl(token, {
+    const reqPayload: GenerateDistributableUploadUrlPayload = {
       fileName: path.basename(targetFile),
       version: version,
       architecture: architecture,
       sha256: sha256,
       os: os
-    }, rest_url)
+    }
+    const response = await generateDistributableUploadUrl(token, reqPayload, rest_url)
 
     const url = response.url
+
+    console.log(`Starting upload under id '${response.uploadId}'`)
 
     const file = fs.readFileSync(targetFile);
 
@@ -102,5 +117,20 @@ export async function uploadDistributable() {
       throw error
     }
 
+    const doneResponse = await notifyBackendUploadCompleted(token, {
+        ...reqPayload,
+        uploadId: response.uploadId
+    }, rest_url + '/done')
 
+    if (doneResponse.msg) {
+        console.warn(`Backend response: ${doneResponse.msg}`);
+    }
+
+    if (!doneResponse.distId) {
+        console.error('Upload confirmation failed, no distId returned')
+        process.exit(1)
+    }
+
+    console.log(`Notified backend of completed file upload. Stored as "${doneResponse.distId}"`)
+    
 }
