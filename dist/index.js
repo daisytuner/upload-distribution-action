@@ -13395,10 +13395,14 @@ const crypto_1 = __nccwpck_require__(6982);
 const axios_1 = __importDefault(__nccwpck_require__(7269));
 const fast_glob_1 = __importDefault(__nccwpck_require__(5648));
 const path_1 = __importDefault(__nccwpck_require__(6928));
-const generateDistributableUploadUrl = async (token, payload, rest_url) => {
+async function generateDistributableUploadUrl(token, payload, rest_url) {
     const response = await (0, index_1.default)(token, "Token").post(rest_url, payload).catch(index_1.errorHandler);
     return response.data;
-};
+}
+async function notifyBackendUploadCompleted(token, payload, rest_url) {
+    const response = await (0, index_1.default)(token, "Token").post(rest_url, payload).catch(index_1.errorHandler);
+    return response.data;
+}
 async function uploadDistributable() {
     (0, index_1.loadServerDebugConfig)();
     const token = process.env['INPUT_TOKEN'];
@@ -13426,14 +13430,16 @@ async function uploadDistributable() {
     const sha256 = hasher.update(fileBuffer).digest('hex');
     console.log(`SHA256 of ${targetFile}: ${sha256}`);
     // Generate the upload url
-    const response = await generateDistributableUploadUrl(token, {
+    const reqPayload = {
         fileName: path_1.default.basename(targetFile),
         version: version,
         architecture: architecture,
         sha256: sha256,
         os: os
-    }, rest_url);
+    };
+    const response = await generateDistributableUploadUrl(token, reqPayload, rest_url);
     const url = response.url;
+    console.log(`Starting upload under id '${response.uploadId}'`);
     const file = fs_1.default.readFileSync(targetFile);
     // Upload the file to the upload url
     try {
@@ -13459,6 +13465,18 @@ async function uploadDistributable() {
         console.error('Error uploading file: ', error);
         throw error;
     }
+    const doneResponse = await notifyBackendUploadCompleted(token, {
+        ...reqPayload,
+        uploadId: response.uploadId
+    }, rest_url + '/done');
+    if (doneResponse.msg) {
+        console.warn(`Backend response: ${doneResponse.msg}`);
+    }
+    if (!doneResponse.distId) {
+        console.error('Upload confirmation failed, no distId returned');
+        process.exit(1);
+    }
+    console.log(`Notified backend of completed file upload. Stored as "${doneResponse.distId}"`);
 }
 
 
