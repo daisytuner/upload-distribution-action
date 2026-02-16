@@ -23,6 +23,7 @@ type GenerateDistributableUploadUrlPayload = {
     os?: string
     uploadId?: string
     distro_meta?: DistroOsRelease
+    channel?: string
 }
 
 type DistributableUploadResponse = {
@@ -66,6 +67,7 @@ export async function uploadDistributable() {
     const distro_id = process.env['INPUT_DIST_ID'] || undefined;
     const distro_version = process.env['INPUT_DIST_VERSION'] || undefined;
     const distro_platform_id = process.env['INPUT_DIST_PLATFORM_ID'] || undefined;
+    const release_channel = process.env['INPUT_CHANNEL'] || undefined;
 
     const matchedFiles = await fg(inputFile);
     if (matchedFiles.length === 0) {
@@ -96,6 +98,7 @@ export async function uploadDistributable() {
       architecture: architecture,
       sha256: sha256,
       os: os,
+      channel: release_channel,
       distro_meta: {
         id: distro_id,
         version_id: distro_version,
