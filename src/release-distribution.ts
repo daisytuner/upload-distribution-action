@@ -7,6 +7,14 @@ import axios from "axios";
 import fg from "fast-glob";
 import path from "path";
 
+export type DistroOsRelease = {
+    name?: string
+    id?: string
+    id_like?: string
+    platform_id?: string
+    version_id?: string
+}
+
 type GenerateDistributableUploadUrlPayload = {
     fileName: string
     sha256?: string
@@ -14,6 +22,8 @@ type GenerateDistributableUploadUrlPayload = {
     architecture?: string
     os?: string
     uploadId?: string
+    distro_meta?: DistroOsRelease
+    channel?: string
 }
 
 type DistributableUploadResponse = {
@@ -54,6 +64,10 @@ export async function uploadDistributable() {
     const architecture = process.env['INPUT_ARCHITECTURE']!;
     const os = process.env['INPUT_OS'] || undefined;
     const rest_url = process.env['INPUT_URL']!;
+    const distro_id = process.env['INPUT_DIST_ID'] || undefined;
+    const distro_version = process.env['INPUT_DIST_VERSION'] || undefined;
+    const distro_platform_id = process.env['INPUT_DIST_PLATFORM_ID'] || undefined;
+    const release_channel = process.env['INPUT_CHANNEL'] || undefined;
 
     const matchedFiles = await fg(inputFile);
     if (matchedFiles.length === 0) {
@@ -83,7 +97,13 @@ export async function uploadDistributable() {
       version: version,
       architecture: architecture,
       sha256: sha256,
-      os: os
+      os: os,
+      channel: release_channel,
+      distro_meta: {
+        id: distro_id,
+        version_id: distro_version,
+        platform_id: distro_platform_id
+      }
     }
     const response = await generateDistributableUploadUrl(token, reqPayload, rest_url)
 

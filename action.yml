@@ -19,6 +19,19 @@ inputs:
   os:
     description: "Target operating system (e.g., linux, darwin)"
     required: false
+  dist-id:
+    description: "Distribution ID (e.g., ubuntu, debian, rhel)"
+    required: false
+  dist-version:
+    description: "Distribution version (e.g., 24.04, 13, 10.1)"
+    required: false
+  dist-platform-id:
+    description: "Distribution platform ID (e.g., platform:el10 for rhel 10 and sister distros)"
+    required: false
+  channel:
+    description: "what type of release this is. e.g. 'dev' for non-release builds"
+    required: false
+
 
 runs:
   using: "node20"
