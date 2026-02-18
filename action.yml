@@ -32,6 +32,13 @@ inputs:
     description: "what type of release this is. e.g. 'dev' for non-release builds"
     required: false
 
+outputs:
+  file-id:
+    description: "ID of the entry in the backend"
+  sha256:
+    description: "SHA256 hash of the uploaded file"
+  entry-created:
+    description: "Whether a new entry was created in the backend or it already preexisted"
 
 runs:
   using: "node20"

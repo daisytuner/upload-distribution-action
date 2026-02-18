@@ -1,20 +1,28 @@
 {
   "name": "upload-distribution-action",
   "version": "1.0.0",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/release-distribution.js",
   "scripts": {
-    "build": "ncc build src/index.ts -o dist"
+    "build": "ncc build src/index.ts -o dist",
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
     "axios": "^1.6.0",
     "axios-logger": "^2.8.1",
-    "fast-glob": "^3.3.3"
+    "fast-glob": "^3.3.3",
+    "jest": "^30.2.0"
   },
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.2.0",
     "@vercel/ncc": "^0.38.3",
-    "typescript": "^5.4.0"
+    "axios-mock-adapter": "^2.1.0",
+    "ts-jest": "^29.4.6",
+    "ts-jest-resolver": "^2.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

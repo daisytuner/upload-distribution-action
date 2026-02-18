@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import fs from "fs";
-import api, { errorHandler, loadServerDebugConfig } from "./index";
+import { api, errorHandler, loadServerDebugConfig } from "./axios-api.js";
 import { createHash } from "crypto";
 import axios from "axios";
 import fg from "fast-glob";
 import path from "path";
+import * as core from "@actions/core";
 
 export type DistroOsRelease = {
     name?: string
@@ -47,69 +48,76 @@ async function notifyBackendUploadCompleted(token: string, payload: GenerateDist
   const response = await api(token, "Token").post<DistributableUploadCompletedResponse>(rest_url, payload).catch(errorHandler);
   return response.data;
 }
-  
 
-export async function uploadDistributable() {
+export async function run() {
 
     loadServerDebugConfig();
 
-    const token = process.env['INPUT_TOKEN']!;
+    const token = core.getInput('token', { required: true });
 
     if (!token) {
       throw new Error('INPUT_TOKEN is not set. You need to set it in the GitHub Actions workflow secrets. You can get the token from the DaisyTuner dashboard under the "Sessions" section.')
     }
 
-    const inputFile = process.env['INPUT_FILE']!;
-    const version = process.env['INPUT_VERSION']!;
-    const architecture = process.env['INPUT_ARCHITECTURE']!;
-    const os = process.env['INPUT_OS'] || undefined;
-    const rest_url = process.env['INPUT_URL']!;
-    const distro_id = process.env['INPUT_DIST_ID'] || undefined;
-    const distro_version = process.env['INPUT_DIST_VERSION'] || undefined;
-    const distro_platform_id = process.env['INPUT_DIST_PLATFORM_ID'] || undefined;
-    const release_channel = process.env['INPUT_CHANNEL'] || undefined;
+    const inputFile = core.getInput('file', { required: true });
+    const version = core.getInput('version', { required: true });
+    const architecture = core.getInput('architecture', { required: true });
+    const os = core.getInput('os') || undefined;
+    const rest_url = core.getInput('url', { required: true });
+    const distro_id = core.getInput('dist-id') || undefined;
+    const distro_id_like = core.getInput('dist-id-like') || undefined;
+    const distro_version = core.getInput('dist-version') || undefined;
+    const distro_platform_id = core.getInput('dist-platform-id') || undefined;
+    const release_channel = core.getInput('channel') || undefined;
 
     const matchedFiles = await fg(inputFile);
     if (matchedFiles.length === 0) {
-        console.error(`No files matched the pattern: ${inputFile}`);
+        core.error(`No files matched the pattern: ${inputFile}`);
         process.exit(1);
     }
 
     const targetFile = matchedFiles[0]; // Use the first matched file
 
     if (!fs.statSync(targetFile)) { // Check if the file exists
-        console.error(`File ${targetFile} does not exist.`);
+        core.error(`File ${targetFile} does not exist.`);
         process.exit(1);
     }
 
-    console.log(`Uploading release ${targetFile} as v${version} for architecture ${architecture}, os ${os}`);
+    const targetInfo: Partial<GenerateDistributableUploadUrlPayload> = {
+      version: version,
+      architecture: architecture,
+      os: os,
+      channel: release_channel,
+      distro_meta: {
+        id: distro_id,
+        id_like: distro_id_like,
+        version_id: distro_version,
+        platform_id: distro_platform_id
+      }
+    }
+
+    core.info(`Uploading release ${targetFile} with metadata ${JSON.stringify(targetInfo)}`);
 
 
     const hasher = createHash('sha256');
     const fileBuffer = fs.readFileSync(targetFile);
     const sha256 = hasher.update(fileBuffer).digest('hex');
-    console.log(`SHA256 of ${targetFile}: ${sha256}`);
+    core.info(`SHA256 of ${targetFile}: ${sha256}`);
+    core.setOutput('sha256', sha256)
 
 
     // Generate the upload url
     const reqPayload: GenerateDistributableUploadUrlPayload = {
+      ...targetInfo,
       fileName: path.basename(targetFile),
-      version: version,
-      architecture: architecture,
       sha256: sha256,
-      os: os,
-      channel: release_channel,
-      distro_meta: {
-        id: distro_id,
-        version_id: distro_version,
-        platform_id: distro_platform_id
-      }
     }
     const response = await generateDistributableUploadUrl(token, reqPayload, rest_url)
 
     const url = response.url
+    core.setOutput('entry-created', response.entryCreated || 'false')
 
-    console.log(`Starting upload under id '${response.uploadId}'`)
+    core.info(`Starting upload under id '${response.uploadId}'`)
 
     const file = fs.readFileSync(targetFile);
 
@@ -122,18 +130,18 @@ export async function uploadDistributable() {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentComplete = (progressEvent.loaded / progressEvent.total) * 100
-            console.log('File upload progress: ', percentComplete.toFixed(2) + '%')
+            core.debug(`File upload progress: ${percentComplete.toFixed(2)}%`)
           }
         }
       })
 
       if (response.status === 200) { //TODO will this ever work? does axios not crash on any actual error?
-        console.log('File uploaded successfully')
+        core.info('File uploaded successfully')
       } else {
         throw new Error(`Upload failed with status: ${response.status}`)
       }
     } catch (error) {
-      console.error('Error uploading file: ', error)
+      core.error('Error uploading file: ' + error)
       throw error
     }
 
@@ -143,14 +151,14 @@ export async function uploadDistributable() {
     }, rest_url + '/done')
 
     if (doneResponse.msg) {
-        console.warn(`Backend response: ${doneResponse.msg}`);
+        core.warning(`Backend response: ${doneResponse.msg}`);
     }
 
     if (!doneResponse.distId) {
-        console.error('Upload confirmation failed, no distId returned')
+        core.error('Upload confirmation failed, no distId returned')
         process.exit(1)
     }
 
-    console.log(`Notified backend of completed file upload. Stored as "${doneResponse.distId}"`)
-    
+    core.info(`Notified backend of completed file upload. Stored as "${doneResponse.distId}"`)
+    core.setOutput('file-id', doneResponse.distId)
 }
