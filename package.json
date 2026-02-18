@@ -5,7 +5,8 @@
   "main": "dist/release-distribution.js",
   "scripts": {
     "build": "ncc build src/index.ts -o dist",
-    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
+    "local-action": "npx @github/local-action . src/main.ts .env"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
